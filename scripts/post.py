@@ -142,19 +142,49 @@ def image_base_url():
 
 
 def check_image(url):
-    req = urllib.request.Request(url, method="HEAD")
     try:
+        req = urllib.request.Request(url, method="HEAD")
         with urllib.request.urlopen(req, timeout=30) as res:
             ctype = res.headers.get("Content-Type", "")
             if res.status != 200 or "image" not in ctype:
                 raise ApiError(f"画像URLが画像を返しません（{res.status} {ctype}）: {url}")
     except urllib.error.HTTPError as e:
         raise ApiError(f"画像URLが開けません（HTTP {e.code}）: {url}") from None
+    except (urllib.error.URLError, ValueError) as e:
+        raise ApiError(f"画像URLが開けません（{e}）: {url}") from None
 
 
 def resolve_user_id(api, token, fields):
     r = call("GET", f"{api}/me", {"fields": fields, "access_token": token})
     return r.get("user_id") or r.get("id")
+
+
+def check_tokens():
+    """投稿せずに、鍵が使えるか（どのアカウントにつながっているか）と画像URLを確かめる。"""
+    ok = True
+    th = os.environ.get("THREADS_ACCESS_TOKEN", "").strip()
+    ig = os.environ.get("IG_ACCESS_TOKEN", "").strip()
+    for name, token, api, fields in (("Threads", th, THREADS_API, "id,username"),
+                                      ("Instagram", ig, IG_API, "user_id,username,account_type")):
+        if not token:
+            print(f"{name}: 鍵が未設定です")
+            ok = False
+            continue
+        try:
+            r = call("GET", f"{api}/me", {"fields": fields, "access_token": token})
+            extra = f"（{r['account_type']}）" if r.get("account_type") else ""
+            print(f"{name}: OK @{r.get('username')}{extra}")
+        except ApiError as e:
+            print(f"::error::{name}: 鍵が使えません: {e}")
+            ok = False
+    url = f"{image_base_url()}/images/A-001.jpg"
+    try:
+        check_image(url)
+        print(f"画像URL: OK {url}")
+    except ApiError as e:
+        print(f"::error::{e}")
+        ok = False
+    return 0 if ok else 1
 
 
 def main():
@@ -163,7 +193,10 @@ def main():
     ap.add_argument("--slot", choices=["am", "pm"], help="省略時は今の時刻（15時より前は am）")
     ap.add_argument("--only", choices=["threads", "instagram"], help="片方だけ投稿する")
     ap.add_argument("--dry-run", action="store_true", help="投稿せずに内容だけ表示する")
+    ap.add_argument("--check", action="store_true", help="投稿せずに鍵と画像URLだけ確かめる")
     args = ap.parse_args()
+    if args.check:
+        return check_tokens()
 
     now = datetime.now(JST)
     day = args.date or now.date().isoformat()

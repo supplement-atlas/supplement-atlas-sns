@@ -16,7 +16,7 @@ X は x.com の予約投稿機能に、週1回まとめて予約します。
 sns投稿管理.xlsx ──(export_posts.py)──▶ data/posts.json ＋ images/*.jpg
                                     └─(make_schedule.py)──▶ data/schedule.csv（いつ・どの投稿）
 GitHub Actions（朝7:17・夜21:17）──(scripts/post.py)──▶ Threads・Instagram に投稿 ─▶ data/log.csv に記録
-GitHub Actions（毎週月曜3:00）──(scripts/refresh_tokens.py)──▶ トークンを延長して Secrets を上書き
+GitHub Actions（毎週水曜3:00）──(scripts/refresh_tokens.py)──▶ トークンを延長して Secrets を上書き
 data/log.csv ＋ data/x_log.csv ──(sync_log_to_xlsx.py)──▶ 管理表の「最終投稿日」「投稿回数」
 schedule.csv ──(x_week.py)──▶ X予約一覧（14本）→ 確認 → x.com で予約 → x_log.csv
 ```
@@ -68,7 +68,7 @@ schedule.csv ──(x_week.py)──▶ X予約一覧（14本）→ 確認 → x
 ### Claude がやること
 1. 開始日を決めて順番を作り直す：`tools\make_schedule.py --start <開始日>`
 2. このフォルダを GitHub のリポジトリに送る（`git remote add origin …` → `git push`）
-3. Actions の画面で「SNS自動投稿」を **お試し（dry_run）** で手動実行して、本文と画像URLを確認
+3. Actions の画面で「SNS自動投稿」を **check（鍵の確認）** で手動実行して、つながっているアカウント名と画像URLを確認。次に **お試し（dry_run）** で本文を確認
 4. 1本目を手動実行（dry_run を外す）→ 各SNSで表示を確認 → A-001 を固定表示に（ユーザー）
 
 ---
@@ -106,7 +106,7 @@ schedule.csv ──(x_week.py)──▶ X予約一覧（14本）→ 確認 → x
 ---
 
 ## 注意
-- トークンは60日で切れる。毎週月曜に自動延長しているので、普段は何もしなくてよい。延長に失敗したら GitHub からメールが届くので、Claude と一緒にトークンを発行し直す
-- GitHub の個人用トークン（SECRETS_PAT）にも有効期限がある。期限の前に作り直して Secrets を上書きする
+- トークンは60日で切れる。毎週水曜に自動延長しているので、普段は何もしなくてよい。延長に失敗したら GitHub からメールが届くので、Claude と一緒にトークンを発行し直す
+- GitHub の個人用トークン（SECRETS_PAT・名前 sns-autopost-secrets）の有効期限は **2027年10月18日**。期限の前に GitHub からメールが来るので、同じ権限（このリポジトリだけ・Secrets 読み書き）で作り直して Secrets を上書きする
 - 投稿は API 経由なので、Instagram の位置情報・音楽・リンクスタンプなどは付けられない
 - 作成：2026年10月18日

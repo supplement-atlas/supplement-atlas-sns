@@ -20,6 +20,10 @@ on:
         description: "お試し（投稿しない）"
         type: boolean
         default: true
+      check:
+        description: "鍵の確認だけ（投稿しない）"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -52,12 +56,14 @@ jobs:
           IN_SLOT: ${{ inputs.slot }}
           IN_ONLY: ${{ inputs.only }}
           IN_DRY: ${{ inputs.dry_run }}
+          IN_CHECK: ${{ inputs.check }}
         run: |
           args=()
           if [ -n "$IN_DATE" ]; then args+=(--date "$IN_DATE"); fi
           if [ -n "$IN_SLOT" ]; then args+=(--slot "$IN_SLOT"); fi
           if [ -n "$IN_ONLY" ]; then args+=(--only "$IN_ONLY"); fi
           if [ "$IN_DRY" = "true" ]; then args+=(--dry-run); fi
+          if [ "$IN_CHECK" = "true" ]; then args=(--check); fi
           python scripts/post.py "${args[@]}"
 
       - name: 投稿記録を保存する
