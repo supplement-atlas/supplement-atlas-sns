@@ -1,0 +1,25 @@
+# Threads・Instagram の長期トークン（60日で切れる）を毎週延長して、GitHub Secrets を上書きする
+name: トークン自動更新
+
+on:
+  schedule:
+    - cron: "0 18 * * 0"   # 毎週月曜 3:00（日本時間）
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: トークンを延長する
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.SECRETS_PAT }}
+        run: python scripts/refresh_tokens.py

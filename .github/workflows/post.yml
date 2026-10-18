@@ -1,0 +1,75 @@
+# 1日2回、スケジュール（data/schedule.csv）の投稿を Threads・Instagram に出して、data/log.csv に記録する
+name: SNS自動投稿
+
+on:
+  schedule:
+    - cron: "17 22 * * *"   # 毎朝 7:17（日本時間）※GitHubの混雑で数分〜数十分遅れることがあります
+    - cron: "17 12 * * *"   # 毎晩 21:17（日本時間）
+  workflow_dispatch:         # 手動実行（Actions の画面の「Run workflow」）
+    inputs:
+      date:
+        description: "投稿日（例 2026-11-01）。空なら今日"
+        required: false
+      slot:
+        description: "am（朝）/ pm（夜）。空なら今の時刻で判断"
+        required: false
+      only:
+        description: "threads / instagram（片方だけ出すとき）。空なら両方"
+        required: false
+      dry_run:
+        description: "お試し（投稿しない）"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sns-autopost
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 投稿する
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_STORY: ${{ vars.IG_STORY }}
+          AUTOPOST_PAUSED: ${{ vars.AUTOPOST_PAUSED }}
+          IMAGE_BASE_URL: ${{ vars.IMAGE_BASE_URL }}
+          IN_DATE: ${{ inputs.date }}
+          IN_SLOT: ${{ inputs.slot }}
+          IN_ONLY: ${{ inputs.only }}
+          IN_DRY: ${{ inputs.dry_run }}
+        run: |
+          args=()
+          if [ -n "$IN_DATE" ]; then args+=(--date "$IN_DATE"); fi
+          if [ -n "$IN_SLOT" ]; then args+=(--slot "$IN_SLOT"); fi
+          if [ -n "$IN_ONLY" ]; then args+=(--only "$IN_ONLY"); fi
+          if [ "$IN_DRY" = "true" ]; then args+=(--dry-run); fi
+          python scripts/post.py "${args[@]}"
+
+      - name: 投稿記録を保存する
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/log.csv 2>/dev/null || exit 0
+          git diff --cached --quiet && exit 0
+          git commit -m "投稿記録 $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+          for i in 1 2 3; do
+            git pull --rebase && git push && exit 0
+            sleep 5
+          done
+          exit 1
