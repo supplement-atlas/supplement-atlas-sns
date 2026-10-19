@@ -1,3 +1,5 @@
 posted_at,date,slot,id,platform,status,media_id,permalink,note
 2026-10-18T13:04:11+09:00,2026-10-19,am,A-001,threads,ok,18038393153653296,https://www.threads.com/@supplement_atlas/post/DenyBmBFO06,
 2026-10-18T13:04:18+09:00,2026-10-19,am,A-001,instagram,ok,18402105337205444,https://www.instagram.com/p/DenyC0nlBj_/,
+2026-10-19T21:49:18+09:00,2026-10-19,pm,A-002,threads,error,,,HTTP 400: API access blocked.（code 200/None）
+2026-10-19T21:49:18+09:00,2026-10-19,pm,A-002,instagram,error,,,HTTP 400: API access blocked.（code 200/None）
