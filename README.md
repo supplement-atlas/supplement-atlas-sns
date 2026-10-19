@@ -109,4 +109,9 @@ schedule.csv ──(x_week.py)──▶ X予約一覧（14本）→ 確認 → x
 - トークンは60日で切れる。毎週水曜に自動延長しているので、普段は何もしなくてよい。延長に失敗したら GitHub からメールが届くので、Claude と一緒にトークンを発行し直す
 - GitHub の個人用トークン（SECRETS_PAT・名前 sns-autopost-secrets）の有効期限は **2027年10月18日**。期限の前に GitHub からメールが来るので、同じ権限（このリポジトリだけ・Secrets 読み書き）で作り直して Secrets を上書きする
 - 投稿は API 経由なので、Instagram の位置情報・音楽・リンクスタンプなどは付けられない
+
+## エラーが出たとき
+- まず `data/log.csv` の note 列（エラー文）を見る
+- **`API access blocked.（code 200）` が Threads・Instagram の両方に出たら**、Meta の開発者アカウントがブロックされている。ユーザーが Facebook にログインして https://developers.facebook.com/apps/ を開き、「アカウントの認証が必要です」が出ていれば認証を完了する。鍵の作り直しは不要（2026-10-19 に発生。作ったばかりの Facebook アカウントで開発者登録〜鍵の発行まで一気に進めたためと思われる）
+- 直ったかは Actions の「SNS自動投稿」を **check** で手動実行して確かめる。取りこぼした枠は、日付と am/pm を指定して dry_run を外して手動実行すれば出し直せる（成功済みの SNS は自動で飛ばす）
 - 作成：2026年10月18日
