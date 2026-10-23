@@ -8,7 +8,7 @@
 
 - 一覧: sns/X予約/X予約_<開始日>.html（本文・文字数・予約日時）
 - 記録: data/x_log.csv（管理表への反映に使う）
-- X は画像を付けない（本文のURLのカード画像で見せる）
+- X も画像を付ける（2026-10-19〜。画像は autopost/images/<記事No>.jpg を Claude in Chrome で添付。画像を付けるとURLのカードは出ない）
 """
 import argparse
 import csv
@@ -87,6 +87,7 @@ def main():
 <tr class="{'over' if n > 280 else ''}">
  <td class="when">{r['date'][5:].replace('-', '/')}（{wd}）<br>{X_TIME[r['slot']]}</td>
  <td class="id">{html.escape(r['id'])}<br><small>{html.escape(p['pattern'])}{'<br><b>PR</b>' if p['pr'] else ''}</small></td>
+ <td class="img">{f'<img src="../autopost/{p["image"]}" alt="">' if p["image"] else 'なし'}</td>
  <td class="text">{html.escape(p['x_text'])}</td>
  <td class="len">{n}/280</td>
 </tr>""")
@@ -97,12 +98,12 @@ body{{font-family:"Yu Gothic UI","Hiragino Sans",sans-serif;background:#FDF6ED;c
 h1{{font-size:20px}} table{{border-collapse:collapse;width:100%;background:#fff}}
 td,th{{border:1px solid #e5d8c8;padding:8px;vertical-align:top;font-size:14px}}
 th{{background:#F9D9C8}} .text{{white-space:pre-wrap;line-height:1.6}} .when,.id,.len{{white-space:nowrap}}
-tr.over{{background:#fde2e2}} .warn{{color:#b3261e;font-weight:bold}}
+tr.over{{background:#fde2e2}} .img img{{width:180px;border-radius:6px;display:block}} .warn{{color:#b3261e;font-weight:bold}}
 </style>
 <h1>X 予約一覧 {start:%Y/%m/%d}〜{end:%m/%d}（{len(rows)}本）</h1>
-<p>画像は付けず、本文のURLのカード画像で見せます。内容を確認して、OKなら Claude が x.com で予約します。</p>
+<p>本文に画像を1枚付けて予約します（画像を付けるとURLのカードは出ませんが、本文のURLは押せます）。内容を確認して、OKなら Claude が x.com で予約します。</p>
 {''.join(f'<p class="warn">⚠ {html.escape(w)}</p>' for w in warns)}
-<table><tr><th>予約日時</th><th>記事No</th><th>本文</th><th>文字数</th></tr>{''.join(items)}</table>
+<table><tr><th>予約日時</th><th>記事No</th><th>画像</th><th>本文</th><th>文字数</th></tr>{''.join(items)}</table>
 """, encoding="utf-8")
     print(f"{len(rows)}本の一覧を作りました → {out}")
     for w in warns:
